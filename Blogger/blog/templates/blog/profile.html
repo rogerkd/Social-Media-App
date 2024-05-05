@@ -50,25 +50,28 @@
                     <p>{{ profile.followers.count }}</p>
                 </div>
             </div>
-            <div class="other-users">
-                <strong>Other Users</strong>
-                <br><br>
-                {% for i in  other_profile_list %}
-                    {% if i not in profile.following.all %}
+
+            {% if user.id is profile.user_id %}
+                <div class="other-users">
+                    <strong>Other Users</strong>
+                    <br><br>
+                    {% for i in  other_profile_list %}
+                        {% if i not in profile.following.all %}
+                            <a href="{% url 'profile' i.user_id %}">@{{i}}</a>
+                            <button> <a href="{% url 'follow_user' i.user_id %}">follow</a> </button> <hr>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="mutuals">
+                    <strong>Mutuals</strong>
+                    <br><br>
+                    {% for i in mutuals %}  
                         <a href="{% url 'profile' i.user_id %}">@{{i}}</a>
-                        <button> <a href="{% url 'follow_user' i.user_id %}">follow</a> </button> <hr>
-                    {% endif %}
-                {% endfor %}
-            </div>
-            <div class="mutuals">
-                <strong>Mutuals</strong>
-                <br><br>
-                {% for i in mutuals %}  
-                    <a href="{% url 'profile' i.user_id %}">@{{i}}</a>
-                    <button> <a href="{% url 'unfollow_user' i.user_id %}">unfollow</a> </button><hr>
-                    {% comment %} <button type="button" onclick="personal_chat({{i.user_id}})">Msg</button><hr> {% endcomment %}
-                {% endfor %}
-            </div>
+                        <button> <a href="{% url 'unfollow_user' i.user_id %}">unfollow</a> </button><hr>
+                        {% comment %} <button type="button" onclick="personal_chat({{i.user_id}})">Msg</button><hr> {% endcomment %}
+                    {% endfor %}
+                </div>
+            {% endif %}
         </div>
         
     {% endblock %}
