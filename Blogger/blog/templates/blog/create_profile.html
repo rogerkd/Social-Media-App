@@ -1,0 +1,21 @@
+{% extends 'blog/master.html' %}
+
+{% block title %}
+{% endblock %}
+
+{% block content %}
+    
+
+    {% if cp %}
+        <a href="{% url 'home' %}">Go Back</a>
+    {% elif ep %}
+        <a href="{% url 'profile' user.id %}">Go Back</a>
+    {% endif %}
+
+    <form action="" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{form.as_p}}
+        <button type='submit' value='submit'>Save</button>
+    </form>
+
+{% endblock %}

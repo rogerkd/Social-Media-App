@@ -1,0 +1,57 @@
+{% extends 'chat/master.html' %}
+
+{% block title %}
+    <title> chat${{user_id}} </title>
+{% endblock %}
+
+{% block content %}
+    <textarea id="chat-log" cols="100" rows="20"></textarea><br>
+    <input id="chat-message-input" type="text" size="100"><br>
+    <input id="chat-message-submit" type="button" value="Send">
+{% endblock %}
+
+{% block js %}
+    {{block.super}}
+
+    <script>
+        const userId = JSON.parse('{{user_id|escapejs}}');
+        const currentUser = JSON.parse('{{current_user|escapejs}}')
+
+        const privateChatSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/privateChat/'
+            + userId
+            + '/'
+        );
+
+        //Receiving message
+        privateChatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            document.querySelector('#chat-log').value += (data.uname + ' => ' + data.msg + '\n');
+        };
+
+        privateChatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');
+        };
+
+        // Sending message
+        document.querySelector('#chat-message-input').focus();
+        document.querySelector('#chat-message-input').onkeyup = function(e) {
+            if (e.keyCode === 13) {  // enter, return
+                document.querySelector('#chat-message-submit').click();
+            }
+        };
+
+        document.querySelector('#chat-message-submit').onclick = function(e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+            privateChatSocket.send(JSON.stringify({
+                'msg': message,
+                'uname': currentUser
+            }));
+            messageInputDom.value = '';
+        };
+
+    </script>
+{% endblock %}

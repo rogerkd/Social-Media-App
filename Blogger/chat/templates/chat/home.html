@@ -1,0 +1,118 @@
+{% extends 'chat/master.html' %}
+
+{% block title %}
+    <title> {{user}} </title>
+{% endblock %}
+
+{% block content %}
+    <a href = "{% url 'home' %}"> Go Back </a>
+    <br>
+    <br>
+
+    Create your ChatRoom & enter?<br>
+    <input id="room-name-input" type="text" size="100"><br>
+    <input id="room-name-submit" type="button" value="Enter">
+    <div id="message-status"></div>
+
+    <br>
+    <br>
+
+    <strong>Chat Room's</strong><br>
+    <hr>
+    {% if room_list %}
+        {% for rooms in room_list %}
+            <p> {{rooms}}
+                <button type="button" onclick="join_room('{{rooms}}')">
+                    Join
+                </button> 
+            </p>
+        {% endfor %}
+    {% else %}
+        No Rooms
+    {% endif %}
+
+{% endblock %}
+
+{% block js %}
+
+    {{ block.super}}
+    <script>
+        userName = JSON.parse('{{username|escapejs}}')
+
+        document.querySelector('#room-name-input').focus();
+        document.querySelector('#room-name-input').onkeyup = function(e) {
+            if (e.key === 'Enter') {  // enter, return
+                document.querySelector('#room-name-submit').click();
+            }
+        };
+
+        document.querySelector('#room-name-submit').onclick = function(e) {
+            var roomName = document.querySelector('#room-name-input').value;
+            var url = "{% url 'save' %}";
+            const csrftoken = getCookie('csrftoken');
+
+            // ajax request
+            fetch(url, {
+                method : 'POST',
+                headers : {
+                    'Content-type' : 'application/json',
+                    'X-CSRFToken' : csrftoken,
+                },
+                body : JSON.stringify({'room_name': roomName})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success'){
+                    join_room(roomName);
+
+                } else if(data.status === 'already_taken'){
+                    var msg_status = document.getElementById('message-status');
+                    msg_status.innerText = roomName+' already exists!!!';
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 2000);
+
+                } else{
+                    console.error('Error saving messages');
+                }
+                
+            });
+            
+        };
+        
+
+        // Join the room and direct to that room
+        function join_room(room) {
+            var url = '/chat/join_room/' + room + '/';
+            const csrftoken = getCookie('csrftoken');
+
+            // ajax request
+            fetch(url, {
+                method : 'GET',
+                headers : {
+                    'Content-type' : 'application/json',
+                    'X-CSRFToken' : csrftoken,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'joined'){
+                    notifySocket.send(JSON.stringify({
+                        'moto': 'join',
+                        'notification': userName+' joined The Room!!',
+                        'username': userName,
+                    }));
+                    window.location.pathname = '/chat/' + room + '/';
+                }
+                else if(data.status === 'already_joined'){
+                    window.location.pathname = '/chat/' + room + '/';
+                }
+                else{
+                    console.error('Error joining room');
+                }
+                
+            });
+        };
+
+    </script>
+{% endblock %}

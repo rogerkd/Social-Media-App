@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel='stylesheet'  href="{% static 'chat_style_profile.css' %}">
+    
+    {% block title %}
+        <title> Profile </title>
+    {% endblock %}
+</head>
+
+<body>
+    {% block content %}
+
+        <header>
+            <h1>{{ profile.user.first_name }}'s Profile</h1>
+            <a href="{% url 'home' %}">Go Back</a>
+        </header>
+
+        <div class="container">
+            <div class="profile-header">
+                <img class="profile-image" src="{{ profile.profile_image.url }}" alt="Profile Image">
+                <div class="profile-info">
+                    <h2>{{ profile.user.first_name }}</h2>
+                    <p style="color: #1da1f2;">@{{ profile.user.username }}</p>
+                    <p style="color: #657786;">{{ profile.bio }}</p>
+                </div>
+            </div>
+            <div class="profile-actions">
+                {% if user.id is profile.user_id %}
+                    <button> <a href = "{% url 'edit_profile' profile.id %}"> Edit Profile </a></button>
+                {% else %}
+                    {% if user in profile.following.all %} 
+                        <button>Followed..</button>
+                    {% else %}
+                        <button> <a href="{% url 'follow_user' user.id %}">follow</a></button>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="followers-following">
+                <div>
+                    <a href="#">Following</a>
+                    <p>{{ profile.following.count }}</p>
+                </div>
+                <div>
+                    <a href="#">Followers</a>
+                    <p>{{ profile.followers.count }}</p>
+                </div>
+            </div>
+            <div class="other-users">
+                <strong>Other Users</strong>
+                <br><br>
+                {% for i in  other_profile_list %}
+                    {% if i not in profile.following.all %}
+                        <a href="{% url 'profile' i.user_id %}">@{{i}}</a>
+                        <button> <a href="{% url 'follow_user' i.user_id %}">follow</a> </button> <hr>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="mutuals">
+                <strong>Mutuals</strong>
+                <br><br>
+                {% for i in mutuals %}  
+                    <a href="{% url 'profile' i.user_id %}">@{{i}}</a>
+                    <button> <a href="{% url 'unfollow_user' i.user_id %}">unfollow</a> </button><hr>
+                    {% comment %} <button type="button" onclick="personal_chat({{i.user_id}})">Msg</button><hr> {% endcomment %}
+                {% endfor %}
+            </div>
+        </div>
+        
+    {% endblock %}
+
+    {% block js %}
+        <script>
+
+            // Directing you to private chat
+            function personal_chat(userId) {
+                window.location.pathname = 'chat/private/'+userId+'/';
+            };
+
+            // Creating Notification socket
+            notifySocket = new WebSocket(
+                'ws://'
+                + window.location.host
+                + '/ws/notify/'
+            );
+
+            // get csrf_token
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+        </script>
+
+    {% endblock %}
+
+</body>
+</html>
+

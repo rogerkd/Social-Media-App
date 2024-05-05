@@ -1,0 +1,19 @@
+{% extends 'blog/master.html' %}
+
+{% block title %}
+{% endblock %}
+
+{% block content %}
+
+        <a href="{% url 'home' %}"> Go Back </a>
+
+        <form action="" method="POST">
+        {% csrf_token %}
+            <p> Are you sure you want to delete this blog? "{{view.title}}" </p>
+            <input type='submit' value="Delete"> 
+
+        </form>
+
+        <button class="button" type="submit"><a href="/view_blog"> Cancel </a></button> 
+    
+{% endblock %}

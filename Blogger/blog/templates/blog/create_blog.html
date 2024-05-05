@@ -1,0 +1,16 @@
+{% extends 'blog/master.html' %}
+
+{% block title %}
+{% endblock %}
+
+{% block content %}
+
+    <a href="{% url 'home' %}">Go Back</a>
+
+    <form action="" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{form.as_p}}
+        <button type='submit' value='submit'>Post</button>
+    </form>
+
+{% endblock %}

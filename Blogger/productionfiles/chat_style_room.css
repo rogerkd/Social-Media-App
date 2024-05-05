@@ -1,0 +1,123 @@
+body {
+    background-color: whitesmoke;
+    font-family: 'Nunito', sans-serif;
+    padding-top: 20px;
+}
+
+/* Chats */
+
+.room-header {
+    width: 1165px;
+    height: 70px;
+    border: 1px solid black;
+    margin: 2px;
+}
+.room-name {
+    margin: auto;
+    font-size: 50px;
+}
+
+.delete-room {
+    width: 50px;
+    padding-left: 1100px;
+    margin-top: -50px;
+
+}
+
+#box {
+    width: 710px;
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid black;
+    /* background-color: rgb(250, 227, 238); */
+}
+
+.demo {
+    width : 200px;
+    height: 20px;
+    padding: 5px;
+    border: 2px solid gray;
+    background-color: rgb(212, 217, 224);
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    margin: 5px;
+}
+
+.demo1 {
+    width : 200px;
+    height: 20px;
+    padding: 5px;
+    border: 2px solid rgb(135, 207, 171);
+    background-color: rgb(197, 252, 234);
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    position: relative;
+    left: 480px;
+    margin: 5px;
+}
+
+.date-plate {
+    margin: 5px;
+    padding-left: 320px;
+    font-size: 10px;
+}
+
+
+.msg-text {
+    width: 200px;
+    height: 15px;
+    padding-top: 1px;
+    overflow: hidden;
+    font-size: 12px;
+}
+
+.msg-dt {
+    width: 20px;
+    height: 10px;
+    padding-left: 170px;
+    padding-bottom: 2px;
+    font-size: 8px;
+    margin: 1px;
+}
+
+.msg-input[type=text] {
+    width: 710px;
+    height: 25px;
+    font-size: 15px;
+
+}
+
+.msg-button[type=button] {
+    margin: 5px;
+    /* margin-left: 575px; */
+    font-size: 20px;
+    width: 50px;
+    height: 30px;
+    background-color:rgb(117, 214, 135);
+    color: black;
+}
+
+
+
+/* Blogs */
+
+.notify {
+    width: 170px;
+    height: 35px;
+    border: 1px solid black;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    margin: 5px;
+    font-size: 10px;
+    margin-top: -120px;
+    margin-left: 600px;
+    
+}
+

@@ -1,0 +1,264 @@
+{% extends 'chat/master.html' %}
+
+{% block title %}
+    <title> {{room_name}} </title>
+{% endblock %}
+
+{% block content %}
+    {% comment %} <div class="room-header">
+        <div class='room-name'> __{{room_name|upper}}__ </h3> </div>
+        <div class='delete-room'> <a href="{% url 'remove' room_name %}"> delete </a> </div>
+    </div>
+
+    <div class="msg-container">
+        {% if view_message %}
+            {% for date in date %}
+                <div  class='date-plate'> {{date}} </div>
+                {% for message in view_message %}
+                    {% if message.timestamp.date|date:"Y-m-d" == date|date:"Y-m-d" %}
+                        {% if message in user_message %}
+                                    <div class="my-msg-plate">
+                                        <i><strong>{{message.user|lower}}</strong></i> - <div class="msg-text"> {{message.content}} </div>  <div class='msg-dt'> {{message.timestamp.time}} </div> <br>
+                                    </div>
+                        {% else %}
+                                    <div class="other-msg-plate">
+                                        <i><strong>{{message.user|lower}}</strong></i> - <div class="msg-text"> {{message.content}} </div>  <div class='msg-dt'> {{message.timestamp.time}} </div> <br>
+                                    </div>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+
+        {% else %}
+            <strong> Lets start the conversation!!! </strong>
+        {% endif %}
+    </div> {% endcomment %}
+
+    {% comment %} <textarea id="chat-log" cols="100" rows="20"></textarea><br> {% endcomment %}
+
+    <h3> {{room_name}} ({{user}})</h3> <button type="button" onclick="leave_room('{{room_name}}')"> Leave </button>
+    <h5> Members: <span id='member_count'> </span> </h5>
+    <div id="box"></div>
+    <br>
+    <input class="msg-input" id="chat-message-input" type="text" size="100"><br>
+    <input class="msg-button" id="chat-message-submit" type="button" value="-->">
+
+    {{ room_name|json_script:"room-name" }}
+
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+
+    <script>
+        const roomName = JSON.parse(document.getElementById('room-name').textContent); 
+        const userName = JSON.parse('{{ user_name|escapejs }}');
+        const roomMembers = JSON.parse('{{ members|escapejs }}');
+        document.getElementById('member_count').innerHTML = roomMembers.length;
+
+        // notification popup
+        function popup(data) {
+            if (roomMembers.includes(userName)) {
+                console.log(data.notification);
+                const x = document.createElement('div');
+                x.className = 'notify';
+                x.textContent = data.notification;
+
+                document.body.appendChild(x);
+
+                // Disapper popup
+                setTimeout(function() {
+                    x.remove();
+                }, 3000);
+            }
+            
+        }
+
+        // Receive notification
+        notifySocket.onmessage = function(e) {
+            const data = JSON.parse(e.data)
+            if(data.moto === 'join'){
+                popup(data);
+            } else if (data.moto === 'leave'){
+                popup(data);
+            }
+        }
+
+
+        function leave_room(room_name) {
+            var url = "/chat/leave_room/"+room_name+"/";
+            const csrftoken = getCookie('csrftoken');
+
+            // ajax request
+            fetch(url, {
+                method : 'GET',
+                headers : {
+                    'Content-type' : 'application/json',
+                    'X-CSRFToken' : csrftoken,
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success'){
+                    notifySocket.send(JSON.stringify({
+                        'moto': 'leave',
+                        'notification': userName+" left the room!!",
+                        'username': userName,
+                    }));
+                    window.location.pathname = '/chat/';                   
+                }else{
+                    console.error('Error saving messages');
+                }
+                
+            });
+            
+        }
+
+
+        const viewMessage = JSON.parse('{{ view_message|escapejs }}');
+        const userMessage = JSON.parse('{{ user_message|escapejs }}');
+        const otherMessage = JSON.parse('{{ other_message|escapejs }}');
+        const date = JSON.parse('{{ date|escapejs }}');
+
+
+        function enter_msg(msg,name) {
+            const x = document.createElement('div');
+            x.className = name;
+
+            const txt = document.createElement('div');
+            txt.className = "msg-text";
+            txt.textContent = msg.fields.content;
+            x.appendChild(txt);
+
+            const time = document.createElement('div');
+            time.className = "msg-dt";
+            time.textContent = msg.fields.timestamp.slice(11,16);
+            x.appendChild(time);
+            document.getElementById("box").appendChild(x);
+        }
+
+        if (viewMessage.length > 0) {
+            for(let j=0; j<=date.length; j++) {
+                const d = document.createElement('div');
+                d.className = "date-plate";
+                d.textContent = date[j];
+                document.getElementById("box").appendChild(d);
+
+                for(let i=0; i<=viewMessage.length; i++) {
+                    if (viewMessage[i]) {
+                        if (viewMessage[i].fields.timestamp.slice(0,10) === date[j]) {
+                            // showing other user's msg
+                            if (otherMessage.some(item => item.pk === viewMessage[i].pk)) {
+                                enter_msg(viewMessage[i], "demo");
+                            }
+                            // showing logged-in user's msg
+                            if(userMessage.some(item => item.pk === viewMessage[i].pk)) {
+                                enter_msg(viewMessage[i], "demo1");
+                            }
+                        }    
+                    }
+                }
+            }
+
+        } else {
+            document.querySelector("#box").innerHTML = "Let's start the conversation...";
+        }
+
+        // Creating chatsocket
+        const chatSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/roomChat/'
+            + roomName
+            + '/'
+        );
+
+        // Chat Receiver specific
+        function specific(data, name){
+            const x = document.createElement('div');
+            x.className = name;
+
+            const txt = document.createElement('div');
+            txt.className = "msg-text";
+            txt.textContent = data.message;
+            x.appendChild(txt);
+
+            const b = document.getElementById("box");
+            b.appendChild(x);
+            b.scrollTop = b.scrollHeight;
+        }
+
+        // Receive Chat message
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            if (data.username === userName) {
+                if (document.querySelector("#box").innerHTML === "Let's start the conversation...") {
+                    document.querySelector("#box").innerHTML = "";
+                }
+                specific(data, "demo1");
+            } else {
+                if (document.querySelector("#box").innerHTML === "Let's start the conversation...") {
+                    document.querySelector("#box").innerHTML = "";
+                }
+                specific(data, "demo");
+            }
+            
+        };
+
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');
+        };
+
+        //Send message
+        document.querySelector('#chat-message-input').focus();
+        document.querySelector('#chat-message-input').onkeyup = function(e) {
+            if (e.key === 'Enter') {  // enter, return
+                document.querySelector('#chat-message-submit').click();   
+            }
+        };
+
+        document.querySelector('#chat-message-submit').onclick = function(e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+
+            if(message != ''){
+                var url = "{% url 'save' %}";
+                const csrftoken = getCookie('csrftoken');
+
+                // ajax request
+                fetch(url, {
+                    method : 'POST',
+                    headers : {
+                        'Content-type' : 'application/json',
+                        'X-CSRFToken' : csrftoken,
+                    },
+                    body : JSON.stringify({'room_name': roomName,
+                                            'content': message})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.status === 'success'){
+                        chatSocket.send(JSON.stringify({
+                            'message': message,
+                            'username': userName
+                        }));
+
+                        notifySocket.send(JSON.stringify({
+                            'moto': 'msg',
+                            'notification': "New messages!!!",
+                            'username': userName,
+                        }));
+                        
+                    }else{
+                        console.error('Error saving messages');
+                    }
+                    
+                });
+                
+                messageInputDom.value = '';
+
+            } 
+        };
+    </script>
+
+{% endblock %}
